@@ -148,20 +148,27 @@ public class RAGService {
     private String buildEnhancedPrompt(String userMessage, String context) {
         StringBuilder prompt = new StringBuilder();
 
-        prompt.append("You are a helpful AI assistant. ");
-        prompt.append("Use the following context to answer the user's question. ");
-        prompt.append("If the context doesn't contain relevant information, say so and provide a general answer.\n\n");
+        prompt.append("You are an expert AI Assistant specialized in information retrieval. ");
+        prompt.append(
+                "Your goal is to provide accurate, concise, and helpful answers based ONLY on the provided context.\n\n");
 
-        prompt.append("CONTEXT:\n");
+        prompt.append("### INSTRUCTIONS:\n");
+        prompt.append("1. Answer the user question using the provided CONTEXT below.\n");
+        prompt.append(
+                "2. If the context contains the answer, cite the document name (e.g., [Document 1]) in your response.\n");
+        prompt.append(
+                "3. If the context DOES NOT contain sufficient information to answer the question, clearly state that the information is not present in the provided documents, then provide a brief general answer if possible.\n");
+        prompt.append("4. Maintain a professional and technical tone.\n\n");
+
+        prompt.append("### CONTEXT:\n");
         prompt.append(context);
         prompt.append("\n");
 
-        prompt.append("USER QUESTION:\n");
+        prompt.append("### USER QUESTION:\n");
         prompt.append(userMessage);
         prompt.append("\n\n");
 
-        prompt.append("Please provide a helpful answer based on the context above. ");
-        prompt.append("If you reference information from the context, mention which document it came from.");
+        prompt.append("### RESPONSE:");
 
         return prompt.toString();
     }

@@ -1,18 +1,20 @@
 package com.example.service;
 
-import ai.djl.huggingface.tokenizers.Encoding;
-import ai.djl.huggingface.tokenizers.HuggingFaceTokenizer;
+import ai.djl.repository.zoo.Criteria;
+import ai.djl.repository.zoo.ZooModel;
+import ai.djl.training.util.ProgressBar;
+import ai.djl.translate.TranslateException;
+import ai.djl.inference.Predictor;
+import ai.djl.huggingface.translator.TextEmbeddingTranslatorFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-
 import jakarta.annotation.PostConstruct;
-import java.io.IOException;
-import java.nio.file.Paths;
-import java.util.Arrays;
+
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Service for generating text embeddings using HuggingFace models via DJL
@@ -32,22 +34,27 @@ public class EmbeddingService {
     @Value("${embedding.cache.enabled:true}")
     private boolean cacheEnabled;
 
-    private HuggingFaceTokenizer tokenizer;
-    private Map<String, float[]> embeddingCache;
+    private ZooModel<String, float[]> model;
+    private ConcurrentHashMap<String, float[]> embeddingCache;
 
     @PostConstruct
     public void initialize() {
         logger.info("Initializing EmbeddingService with model: {}", modelName);
-        embeddingCache = new HashMap<>();
+        embeddingCache = new ConcurrentHashMap<>();
 
         try {
-            // For now, we'll use a simple approach
-            // In production, you'd download and load the actual model
-            logger.info("Embedding service initialized (using simulated embeddings for demo)");
-            logger.warn(
-                    "NOTE: Using simulated embeddings. For production, integrate actual sentence-transformers model");
+            Criteria<String, float[]> criteria = Criteria.builder()
+                    .setTypes(String.class, float[].class)
+                    .optModelUrls("djl://ai.djl.huggingface.pytorch/" + modelName)
+                    .optEngine("PyTorch")
+                    .optTranslatorFactory(new TextEmbeddingTranslatorFactory())
+                    .optProgress(new ProgressBar())
+                    .build();
+
+            this.model = criteria.loadModel();
+            logger.info("Embedding service initialized with real AI model: {}", modelName);
         } catch (Exception e) {
-            logger.error("Failed to initialize embedding model", e);
+            logger.error("Failed to initialize real embedding model. Falling back to simulation.", e);
         }
     }
 
@@ -65,8 +72,8 @@ public class EmbeddingService {
             return embeddingCache.get(text);
         }
 
-        // Generate embedding (simulated for now)
-        float[] embedding = generateSimulatedEmbedding(text);
+        // Generate embedding using real model
+        float[] embedding = generateRealEmbedding(text);
 
         // Cache the result
         if (cacheEnabled && embeddingCache.size() < 10000) { // Limit cache size
@@ -88,10 +95,26 @@ public class EmbeddingService {
     }
 
     /**
-     * Simulated embedding generation using text hashing
-     * TODO: Replace with actual sentence-transformers model
+     * Generate embedding using the real AI model
+     */
+    private float[] generateRealEmbedding(String text) {
+        if (model == null) {
+            return generateSimulatedEmbedding(text);
+        }
+
+        try (Predictor<String, float[]> predictor = model.newPredictor()) {
+            return predictor.predict(text);
+        } catch (TranslateException e) {
+            logger.error("Error during embedding inference", e);
+            return generateSimulatedEmbedding(text);
+        }
+    }
+
+    /**
+     * Fallback simulated embedding generation using text hashing
      */
     private float[] generateSimulatedEmbedding(String text) {
+        logger.warn("Using simulated embedding fallback for text length: {}", text.length());
         float[] embedding = new float[embeddingDimension];
 
         // Use text hash to generate deterministic but varied embeddings

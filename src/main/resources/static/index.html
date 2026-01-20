@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RAG-MCP Intelligence Platform</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <svg class="logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                        <path d="M2 17l10 5 10-5"/>
+                        <path d="M2 12l10 5 10-5"/>
+                    </svg>
+                    <h1>RAG-MCP Intelligence</h1>
+                </div>
+                <div class="header-stats">
+                    <div class="stat-item">
+                        <span class="stat-label">Documents</span>
+                        <span class="stat-value" id="docCount">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Chunks</span>
+                        <span class="stat-value" id="chunkCount">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Status</span>
+                        <span class="status-indicator" id="statusIndicator">
+                            <span class="status-dot"></span>
+                            <span id="statusText">Online</span>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <!-- Tab Navigation -->
+            <div class="tabs">
+                <button class="tab-btn active" data-tab="chat">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                    </svg>
+                    Chat
+                </button>
+                <button class="tab-btn" data-tab="ingest">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                        <polyline points="17 8 12 3 7 8"/>
+                        <line x1="12" y1="3" x2="12" y2="15"/>
+                    </svg>
+                    Ingest
+                </button>
+                <button class="tab-btn" data-tab="search">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <circle cx="11" cy="11" r="8"/>
+                        <path d="m21 21-4.35-4.35"/>
+                    </svg>
+                    Search
+                </button>
+                <button class="tab-btn" data-tab="manage">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <circle cx="12" cy="12" r="3"/>
+                        <path d="M12 1v6m0 6v6M5.64 5.64l4.24 4.24m4.24 4.24l4.24 4.24M1 12h6m6 0h6M5.64 18.36l4.24-4.24m4.24-4.24l4.24-4.24"/>
+                    </svg>
+                    Manage
+                </button>
+            </div>
+
+            <!-- Chat Tab -->
+            <div class="tab-content active" id="chat-tab">
+                <div class="chat-container">
+                    <div class="chat-messages" id="chatMessages">
+                        <div class="welcome-message">
+                            <div class="welcome-icon">🤖</div>
+                            <h2>Welcome to RAG-MCP Intelligence</h2>
+                            <p>Ask questions about your ingested documents and get AI-powered answers with context retrieval.</p>
+                            <div class="example-queries">
+                                <p class="example-label">Try asking:</p>
+                                <button class="example-query" onclick="askExample('What is Spring Boot?')">What is Spring Boot?</button>
+                                <button class="example-query" onclick="askExample('Explain RAG')">Explain RAG</button>
+                                <button class="example-query" onclick="askExample('How does Java work?')">How does Java work?</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="chat-input-container">
+                        <div class="input-wrapper">
+                            <input type="text" id="chatInput" placeholder="Ask a question about your documents..." />
+                            <div class="input-controls">
+                                <label class="topk-control">
+                                    <span>Top-K:</span>
+                                    <input type="number" id="topKInput" value="5" min="1" max="20" />
+                                </label>
+                                <button class="send-btn" id="sendBtn">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                        <line x1="22" y1="2" x2="11" y2="13"/>
+                                        <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                                    </svg>
+                                    Send
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ingest Tab -->
+            <div class="tab-content" id="ingest-tab">
+                <div class="ingest-container">
+                    <div class="ingest-section">
+                        <div class="section-header">
+                            <h3>📁 Filesystem Ingestion</h3>
+                            <p>Ingest documents from your local filesystem</p>
+                        </div>
+                        <div class="form-group">
+                            <label>Directory Path (relative to root)</label>
+                            <input type="text" id="fsPath" placeholder="e.g., test-rag" />
+                        </div>
+                        <div class="form-group">
+                            <label>File Pattern (optional)</label>
+                            <input type="text" id="fsPattern" placeholder="e.g., .*\\.txt or leave empty for all" />
+                        </div>
+                        <button class="action-btn primary" onclick="ingestFilesystem()">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                <polyline points="17 8 12 3 7 8"/>
+                                <line x1="12" y1="3" x2="12" y2="15"/>
+                            </svg>
+                            Ingest from Filesystem
+                        </button>
+                    </div>
+
+                    <div class="ingest-section">
+                        <div class="section-header">
+                            <h3>🌐 Web Ingestion</h3>
+                            <p>Scrape and ingest content from web pages</p>
+                        </div>
+                        <div class="form-group">
+                            <label>Web URL</label>
+                            <input type="url" id="webUrl" placeholder="https://example.com/article" />
+                        </div>
+                        <button class="action-btn primary" onclick="ingestWeb()">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                <circle cx="12" cy="12" r="10"/>
+                                <line x1="2" y1="12" x2="22" y2="12"/>
+                                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                            </svg>
+                            Ingest from Web
+                        </button>
+                    </div>
+
+                    <div class="ingest-section">
+                        <div class="section-header">
+                            <h3>🗄️ Database Ingestion</h3>
+                            <p>Query and ingest data from databases</p>
+                        </div>
+                        <div class="form-group">
+                            <label>SQL Query</label>
+                            <textarea id="dbQuery" placeholder="SELECT * FROM articles" rows="3"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>Connection String</label>
+                            <input type="text" id="dbConnection" placeholder="jdbc:postgresql://localhost:5432/mydb?user=user&password=pass" />
+                        </div>
+                        <button class="action-btn primary" onclick="ingestDatabase()">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                <ellipse cx="12" cy="5" rx="9" ry="3"/>
+                                <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/>
+                                <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
+                            </svg>
+                            Ingest from Database
+                        </button>
+                    </div>
+
+                    <div id="ingestResult" class="result-container"></div>
+                </div>
+            </div>
+
+            <!-- Search Tab -->
+            <div class="tab-content" id="search-tab">
+                <div class="search-container">
+                    <div class="search-header">
+                        <h3>🔍 Document Search</h3>
+                        <p>Search through your vector database without AI generation</p>
+                    </div>
+                    <div class="search-input-group">
+                        <input type="text" id="searchQuery" placeholder="Enter search query..." />
+                        <input type="number" id="searchTopK" value="10" min="1" max="50" />
+                        <button class="action-btn primary" onclick="searchDocuments()">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                <circle cx="11" cy="11" r="8"/>
+                                <path d="m21 21-4.35-4.35"/>
+                            </svg>
+                            Search
+                        </button>
+                    </div>
+                    <div id="searchResults" class="search-results"></div>
+                </div>
+            </div>
+
+            <!-- Manage Tab -->
+            <div class="tab-content" id="manage-tab">
+                <div class="manage-container">
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-card-header">
+                                <h4>Vector Database</h4>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                                </svg>
+                            </div>
+                            <div class="stat-card-content" id="vectorStats">
+                                <div class="loading">Loading...</div>
+                            </div>
+                        </div>
+
+                        <div class="stat-card">
+                            <div class="stat-card-header">
+                                <h4>MCP Sources</h4>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/>
+                                    <polyline points="13 2 13 9 20 9"/>
+                                </svg>
+                            </div>
+                            <div class="stat-card-content" id="mcpSources">
+                                <div class="loading">Loading...</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="actions-section">
+                        <h3>System Actions</h3>
+                        <div class="action-buttons">
+                            <button class="action-btn secondary" onclick="refreshStats()">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <polyline points="23 4 23 10 17 10"/>
+                                    <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+                                </svg>
+                                Refresh Stats
+                            </button>
+                            <button class="action-btn danger" onclick="clearDatabase()">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <polyline points="3 6 5 6 21 6"/>
+                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                                </svg>
+                                Clear Database
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Toast Notifications -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <script src="app.js"></script>
+</body>
+</html>
