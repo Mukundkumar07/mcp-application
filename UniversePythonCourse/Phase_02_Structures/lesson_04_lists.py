@@ -59,3 +59,10 @@ for item in inventory:
 # 6. Print the final list.
 #
 # WRITE YOUR CODE BELOW THIS LINE:
+blacksmith_requests =["Iron","Coal","Wood"]
+print(f"blacksmith_requests :{blacksmith_requests}")
+blacksmith_requests.append("Steel")
+blacksmith_requests[1]="Diamond"
+blacksmith_requests.remove("Iron")
+print(f"final list: {blacksmith_requests}")
+
