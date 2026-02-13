@@ -57,3 +57,11 @@ print(f"\nFuel required for {trip_distance} lightyears: {fuel} units")
 # 5. Call the function again for a "Gold" "Protocol Droid" and print the result directly.
 #
 # WRITE YOUR CODE BELOW THIS LINE:
+def build_droid(droid_type,color):
+    print(f"Building a {color} {droid_type}...")
+    return f"{color} {droid_type}"
+my_droid = build_droid("Blue" ,"R2 Unit")
+print(f"New droid completed: {my_droid}")
+print(build_droid("Protocol Droid","Gold"))
+
+
